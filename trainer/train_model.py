@@ -11,10 +11,45 @@ RANDOM_STATE = config["RANDOM_STATE"]
 KFOLD_SPLITS = config["KFOLD_SPLITS"]
 
 
-def train_models(models, X_train, y_train):
-    """训练所有模型"""
+def train_models(models, X_train, y_train, selected_names=None):
+    """
+    训练模型（支持按名称选择）
+
+    详细描述函数的功能和用途：
+    接收模型字典与训练数据；若提供 `selected_names`，仅训练指定名称的模型，
+    否则训练所有模型。名称匹配不区分大小写。
+
+    Args:
+        models (dict): 名称到模型实例的映射
+        X_train (np.ndarray): 训练集特征
+        y_train (np.ndarray): 训练集标签
+        selected_names (list[str] | None): 指定训练的模型名称列表
+
+    Returns:
+        dict: 已训练的模型字典
+
+    Raises:
+        Exception: 无
+
+    Example:
+        >>> import numpy as np
+        >>> ms = init_all_models()
+        >>> X = np.random.randn(20, 4); y = np.random.randint(0, 2, 20)
+        >>> trained = train_models(ms, X, y, ["SVM", "Logistic Regression"])
+        >>> set(trained.keys()) == {"SVM", "Logistic Regression"}
+        True
+    """
     trained_models = {}
-    for name, model in models.items():
+    if selected_names:
+        want = {n.strip().lower() for n in selected_names}
+        items = [(name, model) for name, model in models.items() if name.lower() in want]
+        missing = want - {name.lower() for name, _ in items}
+        if missing:
+            print(f"警告：以下模型名称未找到，将忽略：{sorted(list(missing))}")
+    else:
+        items = list(models.items())
+
+    for name, model in items:
         print(f"\n训练 {name}...")
         model.fit(X_train, y_train)
         trained_models[name] = model
@@ -45,14 +80,42 @@ def evaluate_models(trained_models, X_test, y_test):
     return eval_results
 
 
-def k_fold_cross_validation(X, y):
-    """k折交叉验证（k=5/10）"""
+def k_fold_cross_validation(X, y, selected_names=None):
+    """
+    k折交叉验证（k=5/10，支持按名称选择）
+
+    详细描述函数的功能和用途：
+    对指定或全部模型执行 k 折交叉验证；当提供 `selected_names` 时仅验证这些模型。
+
+    Args:
+        X (np.ndarray): 全量特征数据
+        y (np.ndarray): 标签数据
+        selected_names (list[str] | None): 指定参与交叉验证的模型名称列表
+
+    Returns:
+        None: 仅打印结果
+
+    Raises:
+        Exception: 无
+
+    Example:
+        >>> import numpy as np
+        >>> X = np.random.randn(40, 5); y = np.random.randint(0, 2, 40)
+        >>> k_fold_cross_validation(X, y, ["SVM"])  # 仅验证 SVM
+    """
     models = init_all_models()
     print("\n=== k折交叉验证结果 ===")
     for k in KFOLD_SPLITS:
         print(f"\n{k}-折验证：")
         kf = KFold(n_splits=k, shuffle=True, random_state=RANDOM_STATE)
-        for name in models.keys():
+        names = list(models.keys())
+        if selected_names:
+            want = {n.strip().lower() for n in selected_names}
+            names = [n for n in names if n.lower() in want]
+            if not names:
+                print("警告：指定模型名称在当前集合中均未找到，使用全部模型进行验证")
+                names = list(models.keys())
+        for name in names:
             precisions, recalls, f1s = [], [], []
             for train_idx, val_idx in kf.split(X):
                 X_kf_train, X_kf_val = X[train_idx], X[val_idx]

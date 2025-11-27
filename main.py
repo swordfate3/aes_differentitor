@@ -61,6 +61,16 @@ def parseArgs():
             "不指定时自动优先选择自定义AES单密钥"
         ),
     )
+    parser.add_argument(
+        "--models",
+        dest="models",
+        type=str,
+        default=None,
+        help=(
+            "指定训练/验证的模型名称（逗号分隔），大小写不敏感；"
+            "可选：SVM, Random Forest, Logistic Regression, Naive Bayes, MLP"
+        ),
+    )
     return parser.parse_args()
 
 
@@ -201,7 +211,11 @@ def main():
             X_train, X_test, y_train, y_test = split_train_test(X, y)
         print("\n步骤5/6：模型训练与评估...")
         models = init_all_models()
-        trained_models = train_models(models, X_train, y_train)
+        selected = None
+        if getattr(args, "models", None):
+            selected = [m.strip() for m in args.models.split(",") if m.strip()]
+            print(f"选择训练模型：{selected}")
+        trained_models = train_models(models, X_train, y_train, selected)
         evaluate_models(trained_models, X_test, y_test)
 
     # 步骤6：交叉验证与可视化
@@ -220,7 +234,11 @@ def main():
             X, y = prepare_train_data(cipher_features, random_features, valid_indices)
         if run_all or "cv" in steps:
             print("\n步骤6A：交叉验证...")
-            k_fold_cross_validation(X, y)
+            selected = None
+            if getattr(args, "models", None):
+                selected = [m.strip() for m in args.models.split(",") if m.strip()]
+                print(f"选择参与交叉验证的模型：{selected}")
+            k_fold_cross_validation(X, y, selected)
         if run_all or "plot" in steps:
             print("\n步骤6B：可视化（PCA + tSNE + Top3 KDE）...")
             X_cipher = cipher_features[:, valid_indices]
@@ -230,7 +248,11 @@ def main():
             if trained_models is None:
                 models = init_all_models()
                 X_train, X_test, y_train, y_test = split_train_test(X, y)
-                trained_models = train_models(models, X_train, y_train)
+                selected = None
+                if getattr(args, "models", None):
+                    selected = [m.strip() for m in args.models.split(",") if m.strip()]
+                    print(f"选择训练用于可视化的模型：{selected}")
+                trained_models = train_models(models, X_train, y_train, selected)
             plot_top_kde_features(
                 X_cipher, X_random, valid_indices, trained_models["Random Forest"]
             )
