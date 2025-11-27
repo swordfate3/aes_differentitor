@@ -1,0 +1,31 @@
+# 论文核心参数
+BLOCK_SIZE: 16  # AES-128块大小（128bit=16byte）
+SAMPLE_PER_BATCH: 1024  # 提升批次样本数，增强统计稳定性
+BATCH_NUM: 128  # 增加批次数，确保筛选出有效特征
+AES_KEY_SIZES: [16, 24, 32]  # AES-128(16B)/192(24B)/256(32B)
+RANDOM_SET_NUM: 4  # 论文中筛选的4个随机数据集
+# 自定义AES控制参数
+ROUNDS: 10  # 自定义AES轮数（支持1-14），默认10
+# 特征工程参数
+ALPHA: 0.05             # KS测试显著性水平（特征筛选）
+STAT_TESTS: [           # 20种统计测试名称（与stat_tests.py对应）
+    "anderson_darling", "approx_entropy", "chi2_dist", "chi2_unif",
+    "cumulative_sums", "shannon_entropy", "f_test", "gap_test",
+    "jarque_bera", "ks_test", "lilliefors", "monobit",
+    "runs_test_blocks", "serial_test", "shapiro_wilk", "t_test",
+    "hamming_weight", "frequency_block", "autocorrelation", "mann_whitney",
+    "longest_run_ones", "matrix_rank_32", "linear_complexity",
+    "serial_test", "shapiro_wilk", "t_test",
+]
+
+# 模型参数
+TEST_SIZE: 0.2          # 训练/测试集划分比例（8:2）
+RANDOM_STATE: 42        # 随机种子（保证实验可复现）
+KFOLD_SPLITS: [5, 10]   # k折交叉验证折数（5/10）
+
+data:
+  save_dir_random: "data/random_datasets"  # 【FIX-CHANGED】改为项目相对路径，随机数据集保存目录
+  save_dir_aes: "data/aes_datasets"  # 【FIX-CHANGED】改为项目相对路径，AES数据集保存目录
+  save_dir: "data"  # 【FIX-CHANGED】改为项目相对路径，特征数据集保存根目录
+plot:
+  save_dir: "plots"  # 【FIX-CHANGED】改为项目相对路径，可视化图表保存目录

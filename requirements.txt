@@ -1,0 +1,8 @@
+pycryptodome >= 3.16.0
+scikit-learn >= 1.2.2
+scipy >= 1.10.1
+numpy >= 1.24.3
+matplotlib >= 3.7.1
+pyentrp >= 0.5.1
+pandas >= 2.0.2
+PyYAML >= 6.0
